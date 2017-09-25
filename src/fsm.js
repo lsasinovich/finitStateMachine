@@ -1,60 +1,88 @@
 class FSM {
-    /**
-     * Creates new FSM instance.
-     * @param config
-     */
-    constructor(config) {}
 
-    /**
-     * Returns active state.
-     * @returns {String}
-     */
-    getState() {}
+    constructor(config) {
+        this.config = config;
+        this.state = this.config.initial;
+        this.history = [];
+        this.i = 0;
+    }
 
-    /**
-     * Goes to specified state.
-     * @param state
-     */
-    changeState(state) {}
+    
+    getState() {
+        return this.state;
+    }
 
-    /**
-     * Changes state according to event transition rules.
-     * @param event
-     */
-    trigger(event) {}
+    
+    changeState(state) {
+        if (state in this.config.states){
+            this.history.push(this.state);
+            this.i++;
+            this.state = state;
+            this.history.length = this.i;
+        }
+        else throw new Error();
+    }
 
-    /**
-     * Resets FSM state to initial.
-     */
-    reset() {}
+    trigger(event) {
+        var flag = false;
+        for (var key in this.config.states[this.state].transitions)
+            if (key == event)
+                flag = true;
+        if((this.state == "initial" && event == "study") || flag == true){
+            this.history.push(this.state);
+            this.i++;
+            this.history.length = this.i;
+            this.state = this.config.states[this.state].transitions[event];
+            return this.state;
+        }
+        else throw new Error();
+    }
 
-    /**
-     * Returns an array of states for which there are specified event transition rules.
-     * Returns all states if argument is undefined.
-     * @param event
-     * @returns {Array}
-     */
-    getStates(event) {}
+    reset() {
+        this.history.push(this.state);
+        this.i++;
+        this.state = this.config.initial;
+    }
 
-    /**
-     * Goes back to previous state.
-     * Returns false if undo is not available.
-     * @returns {Boolean}
-     */
-    undo() {}
+    getStates(event) {
+        var states = [];
+        for (var key in this.config.states){
+            if (arguments.length == 0)
+                 states.push(key);
+             else if (event in this.config.states[key].transitions)
+                states.push(key);
+        }
+        return states;
+    }
 
-    /**
-     * Goes redo to state.
-     * Returns false if redo is not available.
-     * @returns {Boolean}
-     */
-    redo() {}
+        undo() {
+        if(this.i == 0)
+            return false;
+        else{
+            this.history[this.i]=this.state;
+            this.state = this.history[this.i-1];
+            this.i--;
+            return true;
+        }
+    }
 
-    /**
-     * Clears transition history
-     */
-    clearHistory() {}
+    redo() {
+        if(this.history[this.i+1] === undefined)
+            return false;
+        else{
+
+            this.state = this.history[this.i+1];
+            this.i++;
+            return true;
+        }
+    }
+
+    clearHistory() {
+        this.history = [];
+        this.i = 0;
+    }
 }
+
 
 module.exports = FSM;
 
